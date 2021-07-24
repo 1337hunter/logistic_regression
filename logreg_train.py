@@ -34,21 +34,27 @@ class LogisticRegression:
             for target in self.targets:
                 code_y = np.array([1 if x == target else 0 for x in y])
                 temp_weights = [0] * len(self.weights[target])
+                lr = self.lr
                 for i in range(self.epoch):
                     for j in range(len(temp_weights)):
                         temp = self.weights[target][j] - \
-                                self.lr * ((self.h(X, self.weights[target]) - code_y) \
+                                lr * ((self.h(X, self.weights[target]) - code_y) \
                                 * X[:, j]).mean()
                         temp_weights[j] = temp.copy()
                     self.weights[target] = temp_weights.copy()
                     losses[target] += [self.Loss(self.h(X, self.weights[target]), code_y)]
                     tq.update(1)
-        plt.show(block=False)
-        for k, v in losses.items():
-            plt.plot(list(range(self.epoch)), v, label=k)
-        plt.title("Train loss")
-        plt.legend(list(losses.keys()))
-        plt.show()
+        print("Show train loss graph? [y/n] ", end="")
+        if input() == 'y':
+            plt.show(block=False)
+            for k, v in losses.items():
+                plt.plot(list(range(self.epoch)), v, label=k)
+            plt.title("Train loss")
+            plt.legend(list(losses.keys()))
+            plt.show()
+
+    def predict(self):
+        pass
 
 
 
@@ -81,6 +87,29 @@ def Normalize(X):
     X = (X - mean) / std
     return X, mean, std
 
+def train_test_split(X, y, test_size=0.2):
+    X_train = []
+    y_train = []
+    X_test = []
+    y_test = []
+    d = {}
+    columns = []
+    for x in y:
+        if x not in columns:
+            columns += [x]
+    for col in columns:
+        rez = np.where(y == col)
+        i = 0
+        while i < len(rez):
+            if i % test_size * 100 == 0:
+                X_test += [X[rez[i]]]
+                y_test += [y[rez[i]]]
+            else:
+                X_train += [X[rez[i]]]
+                y_train += [y[rez[i]]]
+
+
+    return X_train, y_train, X_test, y_test
 
 
 def main():
@@ -93,6 +122,8 @@ def main():
         exit()
     DropNan(X, y)
     X, mean, std = Normalize(X)
+    y = np.array(y)
+    X_train, y_train, X_val, y_val = train_test_split(X, y)
     logreg = LogisticRegression()
     logreg.fit(X, y)
 

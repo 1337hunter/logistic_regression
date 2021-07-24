@@ -5,7 +5,6 @@ import  csv
 import  datetime
 import  math
 from tabulate import tabulate
-import gc
 
 def isfloat(val):
     try:
