@@ -107,7 +107,7 @@ def train_test_split(X, y, test_size=0.2):
             else:
                 X_train += [X[rez[i]]]
                 y_train += [y[rez[i]]]
-
+            i += 1
 
     return X_train, y_train, X_test, y_test
 

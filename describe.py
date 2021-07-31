@@ -5,6 +5,11 @@ import  csv
 import  datetime
 import  math
 from tabulate import tabulate
+import scipy.stats as st
+from tqdm import tqdm
+import numpy as np
+
+np.seterr(all='ignore')
 
 def isfloat(val):
     try:
@@ -29,6 +34,11 @@ class Describe:
         self.Q25 = {}
         self.Q50 = {}
         self.Q75 = {}
+        self.iqr = {}
+        self.range = {}
+        self.best_dist = {}
+        self.dist_params = {}
+        self.dist_pval = {}
 
     def ReadFile(self):
         with open(self.filename, 'r') as file:
@@ -89,6 +99,7 @@ class Describe:
             if self.listed[k] != []:
                 self.min[k] = self.listed[k][0]
                 self.max[k] = self.listed[k][-1]
+                self.range[k] = self.max[k] - self.min[k]
             else:
                 continue
             L25 = (self.count[k] + 1) * 0.25
@@ -105,15 +116,49 @@ class Describe:
             self.Q25[k] = P25
             self.Q50[k] = P50
             self.Q75[k] = P75
+            self.iqr[k] = P75 - P25
+
+    def get_best_distribution(self):
+        dist_names = ["norm", "exponweib", "weibull_max", "weibull_min", "pareto", "genextreme"]
+        dist_results = []
+        params = {}
+        with tqdm(total=len(self.listed.keys()) * len(dist_names)) as tq:
+            for k in self.listed.keys():
+                for dist_name in dist_names:
+                    dist = getattr(st, dist_name)
+                    param = dist.fit(self.listed[k])
+                    params[dist_name] = param
+                    # Applying the Kolmogorov-Smirnov test
+                    D, p = st.kstest(self.listed[k], dist_name, args=param)
+                    dist_results.append((dist_name, p))
+                    tq.update(1)
+
+                # select the best fitted distribution
+                best_dist, best_p = (max(dist_results, key=lambda item: item[1]))
+                self.best_dist[k] = best_dist
+                self.dist_params[k] = params[dist_name]
+                self.dist_pval[k] = best_p
+
+
+    def find_best_distr(self):
+        for k in self.listed.keys():
+            print()
+            print(self.get_best_distribution(self.listed[k]))
+            print()
 
     def Describe(self):
         self.GetCount()
         self.GetMean()
         self.GetStd()
         self.GetQMinMax()
+        self.get_best_distribution()
 
     def Print(self):
         self.columns = sorted(self.columns)
+        i = 0
+        for k, v in self.best_dist.items():
+            self.columns[i] += '\n(' + v + ')'
+            i += 1
         self.mean = {k: v for k, v in sorted(self.mean.items(), key=lambda item: item[0])}
         self.count = {k: v for k, v in sorted(self.count.items(), key=lambda item: item[0])}
         self.min = {k: v for k, v in sorted(self.min.items(), key=lambda item: item[0])}
@@ -122,6 +167,9 @@ class Describe:
         self.Q25 = {k: v for k, v in sorted(self.Q25.items(), key=lambda item: item[0])}
         self.Q50 = {k: v for k, v in sorted(self.Q50.items(), key=lambda item: item[0])}
         self.Q75 = {k: v for k, v in sorted(self.Q75.items(), key=lambda item: item[0])}
+        self.iqr = {k: v for k, v in sorted(self.iqr.items(), key=lambda item: item[0])}
+        self.range = {k: v for k, v in sorted(self.range.items(), key=lambda item: item[0])}
+        self.best_dist = {k: v for k, v in sorted(self.best_dist.items(), key=lambda item: item[0])}
         columns = [''] + self.columns
 
         print(tabulate([
@@ -132,17 +180,23 @@ class Describe:
             ['25%'] + list(self.Q25.values()),
             ['50%'] + list(self.Q50.values()),
             ['75%'] + list(self.Q75.values()),
-            ['Max'] + list(self.max.values())], headers=columns, tablefmt='plain', floatfmt=".6f"))
+            ['Max'] + list(self.max.values()),
+            ['IQR'] + list(self.iqr.values()),
+            ['Range'] + list(self.range.values())], headers=columns, tablefmt='plain', floatfmt=".6f"))
+        #print(tabulate([
+        #    ['Distribution'] + list(self.best_dist.values())], headers=columns, tablefmt='plain', floatfmt=".6f"))
 
     def ConvertBirthday(self):
         start = datetime.datetime.fromtimestamp(0)
         self.mean['Birthday'] = datetime.datetime.fromtimestamp(self.mean['Birthday']).strftime('%Y-%m-%d')
-        self.std['Birthday'] = (datetime.datetime.fromtimestamp(self.std['Birthday']) - start).days
+        self.std['Birthday'] = str((datetime.datetime.fromtimestamp(self.std['Birthday']) - start).days) + '(d)'
         self.min['Birthday'] = datetime.datetime.fromtimestamp(self.min['Birthday']).strftime('%Y-%m-%d')
         self.max['Birthday'] = datetime.datetime.fromtimestamp(self.max['Birthday']).strftime('%Y-%m-%d')
         self.Q25['Birthday'] = datetime.datetime.fromtimestamp(self.Q25['Birthday']).strftime('%Y-%m-%d')
         self.Q50['Birthday'] = datetime.datetime.fromtimestamp(self.Q50['Birthday']).strftime('%Y-%m-%d')
         self.Q75['Birthday'] = datetime.datetime.fromtimestamp(self.Q75['Birthday']).strftime('%Y-%m-%d')
+        self.iqr['Birthday'] = str((datetime.datetime.fromtimestamp(self.iqr['Birthday']) - start).days) + '(d)'
+        self.range['Birthday'] = str((datetime.datetime.fromtimestamp(self.range['Birthday']) - start).days) + '(d)'
         pass
 
     def __call__(self):
