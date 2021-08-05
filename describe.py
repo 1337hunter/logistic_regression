@@ -20,6 +20,7 @@ def isfloat(val):
     except:
         return False
 
+
 class Describe:
     def __init__(self, filename):
         self.filename = filename
@@ -39,6 +40,7 @@ class Describe:
         self.best_dist = {}
         self.dist_params = {}
         self.dist_pval = {}
+
 
     def ReadFile(self):
         with open(self.filename, 'r') as file:
@@ -63,6 +65,7 @@ class Describe:
                             self.listed[k] += [newrow[k]]
                 self.content += [newrow]
 
+
     def FilterNumerics(self):
         for k, v in self.content[0].items():
             try:
@@ -75,16 +78,19 @@ class Describe:
                 self.max[k] = 0
             except:
                 pass
-    
+
+
     def GetCount(self):
         for x in self.content:
             for k, v in x.items():
                 self.count[k] += 1
 
+
     def GetMean(self):
         for x in self.content:
             for k, v in x.items():
                 self.mean[k] += v / self.count[k]
+
 
     def GetStd(self):
         for x in self.content:
@@ -92,7 +98,8 @@ class Describe:
                 self.std[k] += (v - self.mean[k]) ** 2 / self.count[k]
         for k, v in self.std.items():
             self.std[k] = math.sqrt(self.std[k])
-    
+
+
     def GetQMinMax(self):
         for k in self.listed.keys():
             self.listed[k] = sorted(self.listed[k])
@@ -118,6 +125,7 @@ class Describe:
             self.Q75[k] = P75
             self.iqr[k] = P75 - P25
 
+
     def get_best_distribution(self):
         dist_names = ["norm", "exponweib", "weibull_max", "weibull_min", "pareto", "genextreme"]
         dist_results = []
@@ -140,25 +148,22 @@ class Describe:
                 self.dist_pval[k] = best_p
 
 
-    def find_best_distr(self):
-        for k in self.listed.keys():
-            print()
-            print(self.get_best_distribution(self.listed[k]))
-            print()
-
     def Describe(self):
         self.GetCount()
         self.GetMean()
         self.GetStd()
         self.GetQMinMax()
-        self.get_best_distribution()
+        if len(sys.argv) > 2 and sys.argv[2] == "-dist":
+            self.get_best_distribution()
+
 
     def Print(self):
         self.columns = sorted(self.columns)
-        i = 0
-        for k, v in self.best_dist.items():
-            self.columns[i] += '\n(' + v + ')'
-            i += 1
+        if len(sys.argv) > 2 and sys.argv[2] == "-dist":
+            i = 0
+            for k, v in self.best_dist.items():
+                self.columns[i] += '\n(' + v + ')'
+                i += 1
         self.mean = {k: v for k, v in sorted(self.mean.items(), key=lambda item: item[0])}
         self.count = {k: v for k, v in sorted(self.count.items(), key=lambda item: item[0])}
         self.min = {k: v for k, v in sorted(self.min.items(), key=lambda item: item[0])}
@@ -186,6 +191,7 @@ class Describe:
         #print(tabulate([
         #    ['Distribution'] + list(self.best_dist.values())], headers=columns, tablefmt='plain', floatfmt=".6f"))
 
+
     def ConvertBirthday(self):
         start = datetime.datetime.fromtimestamp(0)
         self.mean['Birthday'] = datetime.datetime.fromtimestamp(self.mean['Birthday']).strftime('%Y-%m-%d')
@@ -199,6 +205,7 @@ class Describe:
         self.range['Birthday'] = str((datetime.datetime.fromtimestamp(self.range['Birthday']) - start).days) + '(d)'
         pass
 
+
     def __call__(self):
         self.ReadFile()
         self.FilterNumerics()
@@ -211,10 +218,12 @@ def main():
     best_class = Describe(sys.argv[1])
     best_class()
 
+
 def CheckArgs():
-    if len(sys.argv) != 2:
-        print(f"Usage: {__file__} <dataset>")
+    if len(sys.argv) < 2:
+        print(f"Usage: {__file__} <dataset_name.csv> <flags>")
         exit()
+
 
 if __name__ == '__main__':
     CheckArgs()
