@@ -11,7 +11,7 @@ import ast
 
 
 class LogisticRegression:
-    def __init__(self, epoch=100, lr=1):
+    def __init__(self, epoch=100, lr=20):
         self.weights = {}
         self.epoch = epoch
         self.lr = lr
@@ -70,3 +70,8 @@ class LogisticRegression:
             results += [target_]
             i += 1
         return np.array(results)
+
+    def unnormalize_weights(self, coef):
+        for k in self.weights.keys():
+            self.weights[k] = list(self.weights[k] * coef)
+

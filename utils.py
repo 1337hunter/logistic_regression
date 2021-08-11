@@ -1,7 +1,9 @@
 import csv
 import numpy as np
+from logistic_regression import LogisticRegression
+import ast
 
-def LoadDataset(path, features, target):
+def LoadDataset(path, features, target=None):
     it = csv.DictReader(path)
     X = []
     y = []
@@ -9,17 +11,37 @@ def LoadDataset(path, features, target):
         it = csv.DictReader(file)
         for row in it:
             X += [[np.nan if row[x] == '' else float(row[x]) for x in features]]
-            y += [row[target]]
+            if target is not None:
+                y += [row[target]]
     return X, y
 
 
-def DropNan(X, y):
+def DropNan(X, y=None):
     i = 0
     while i < len(X):
-        if np.nan in X[i] or y[i] == '':
+        if np.nan in X[i] or (y is not None and y[i] == ''):
             del X[i]
-            del y[i]
+            if y is not None:
+                del y[i]
         else:
+            i += 1
+
+def FillNan(X, mean):
+    i = 0
+    while i < X.shape[0]:
+        j = 0
+        while j < len(X[i]):
+            if np.isnan(X[i][j]):
+                X[i][j] = mean[j]
+            j += 1
+        i += 1
+
+def save_predictions(path, pred):
+    with open(path, 'w+') as file:
+        i = 0
+        file.write("Index,Hogwarts House\n")
+        while i < len(pred):
+            file.write(f'{str(i)},{pred[i]}\n')
             i += 1
 
 
