@@ -2,6 +2,8 @@ import csv
 import numpy as np
 from logistic_regression import LogisticRegression
 import ast
+import copy
+import math
 
 def LoadDataset(path, features, target=None):
     it = csv.DictReader(path)
@@ -33,6 +35,41 @@ def FillNan(X, mean):
         while j < len(X[i]):
             if np.isnan(X[i][j]):
                 X[i][j] = mean[j]
+            j += 1
+        i += 1
+
+def find_nearest_naighbor(j, row, X):
+    row[j] = 0
+    i = 0
+    min_dist = math.inf
+    min_index = -1
+    while i < X.shape[0]:
+        has_nan = False
+        j = 0
+        while j < len(X[i]):
+            if np.isnan(X[i][j]):
+                has_nan = True
+                break
+            j += 1
+        if not has_nan:
+            dist = np.sqrt(((X[i] - row) * (X[i] - row)).sum())
+            if dist < min_dist:
+                min_dist = dist
+                min_index = i
+        i += 1
+    return X[min_index][j - 1]
+
+
+
+
+
+def FillNanKNN(X, X_train):
+    i = 0
+    while i < X.shape[0]:
+        j = 0
+        while j < len(X[i]):
+            if np.isnan(X[i][j]):
+                X[i][j] = find_nearest_naighbor(j, copy.copy(X[i]), X_train)
             j += 1
         i += 1
 
@@ -70,7 +107,7 @@ def Normalize(X):
     return X, mean, std
 
 
-def train_test_split(X, y, test_size=0.2):
+def train_test_split(X, y, test_size=0.1):
     X_train = []
     y_train = []
     X_test = []

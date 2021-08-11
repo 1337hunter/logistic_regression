@@ -20,7 +20,9 @@ def main():
     #DropNan(X, y)
     X = np.array(X)
     #FillNan(X, np.nanmean(X, axis=0))
-    FillNan(X, np.array([0] * X.shape[0]))
+    FillNan(X, np.array([-1] * X.shape[0]))
+    #FillNan(X, np.nanmedian(X, axis=0))
+    #FillNanKNN(X, X)
     sample = np.array(X[0])
     X, mean, std = Normalize(X)
     coef = ((sample - mean) / std) / sample

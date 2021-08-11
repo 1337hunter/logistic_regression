@@ -11,7 +11,7 @@ import ast
 
 
 class LogisticRegression:
-    def __init__(self, epoch=100, lr=20):
+    def __init__(self, epoch=70, lr=7):
         self.weights = {}
         self.epoch = epoch
         self.lr = lr
@@ -30,7 +30,10 @@ class LogisticRegression:
         #X = np.c_[[1] * X.shape[0], X]
         losses = {}
         for x in self.targets:
-            self.weights[x] = np.array([0] * X.shape[1])
+            #self.weights[x] = np.array([.0] * X.shape[1])
+            np.random.seed(37)
+            self.weights[x] = (np.random.random(X.shape[1]) )
+            print(self.weights[x])
             losses[x] = []
         with tqdm(total=len(self.targets * self.epoch)) as tq:
             for target in self.targets:
