@@ -31,8 +31,8 @@ class LogisticRegression:
         losses = {}
         for x in self.targets:
             #self.weights[x] = np.array([.0] * X.shape[1])
-            np.random.seed(37)
-            self.weights[x] = (np.random.random(X.shape[1]) )
+            np.random.seed(1)
+            self.weights[x] = (np.random.random(X.shape[1]))
             print(self.weights[x])
             losses[x] = []
         with tqdm(total=len(self.targets * self.epoch)) as tq:

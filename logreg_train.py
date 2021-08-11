@@ -11,7 +11,7 @@ from utils import *
 
 def main():
     path = './data/dataset_train.csv'
-    features = ['Herbology', 'Astronomy', 'Ancient Runes']
+    features = ['Herbology', 'Astronomy', 'Ancient Runes', 'Defense Against the Dark Arts']
     target = 'Hogwarts House'
     X, y = LoadDataset(path, features, target)
     if len(X) != len(y):
@@ -20,9 +20,9 @@ def main():
     #DropNan(X, y)
     X = np.array(X)
     #FillNan(X, np.nanmean(X, axis=0))
-    FillNan(X, np.array([-1] * X.shape[0]))
     #FillNan(X, np.nanmedian(X, axis=0))
     #FillNanKNN(X, X)
+    FillNan(X, np.array([-1] * X.shape[0]))
     sample = np.array(X[0])
     X, mean, std = Normalize(X)
     coef = ((sample - mean) / std) / sample
@@ -31,8 +31,7 @@ def main():
     X_train, y_train, X_test, y_test = train_test_split(X, y)
     logreg = LogisticRegression()
     logreg.fit(X_train, y_train)
-    
-    #logreg.fit(X, y)
+    #logreg.fit(X, y) # this yields less accuracy
     pred = logreg.predict(X_test)
     print("Test accuracy:", accuracy(pred, y_test))
     coef = ((sample - mean) / std) / sample

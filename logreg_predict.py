@@ -13,7 +13,7 @@ def main():
     logreg = load('logreg.model')
     path = './data/dataset_test.csv'
     output_path = './data/houses.csv'
-    features = ['Herbology', 'Astronomy', 'Ancient Runes']
+    features = ['Herbology', 'Astronomy', 'Ancient Runes', 'Defense Against the Dark Arts']
     X, _ = LoadDataset(path, features)
     X_train, _ = LoadDataset("./data/dataset_train.csv", features)
     X = np.array(X)
