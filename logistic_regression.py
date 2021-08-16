@@ -12,14 +12,14 @@ import ast
 
 class LogisticRegression:
     def __init__(self, optimizer=None, epoch=70, lr=7,
-            random_state=None, batch_size=None, batch_shuffle=False):
+            random_state=None, batch_size=None, plot=False):
         self.weights = {}
         self.epoch = epoch
         self.lr = lr
         self.optimizer = optimizer
         self.random_state = random_state
         self.batch_size = batch_size
-        self.shuffle = batch_shuffle
+        self.plot = plot
     
     def sigmoid(self, z):
         return 1 / (1 + np.exp(-z))
@@ -47,14 +47,11 @@ class LogisticRegression:
                                 * X[:, j]).mean()
                         temp_weights[j] = temp.copy()
                     self.weights[target] = temp_weights.copy()
-                    loss[target] += [self.Loss(self.h(X, self.weights[target], 1), code_y)]
+                    if self.plot:
+                        loss[target] += [self.Loss(self.h(X, self.weights[target], 1), code_y)]
                     tq.update(1)
-        plt.show(block=False)
-        for k, v in loss.items():
-            plt.plot(list(range(self.epoch)), v, label=k)
-        plt.title("Train loss")
-        plt.legend(list(loss.keys()))
-        plt.show()
+        if self.plot:
+            self.print_loss(loss)
 
 
     def fit_sgd(self, X, y):
@@ -76,6 +73,9 @@ class LogisticRegression:
                         train_index = len(y) - 1
                     else:
                         train_index -= 1
+                    if self.plot:
+                        loss[target] += [self.Loss(self.h(X,
+                        self.weights[target], 1), code_y)]
                     for j in range(len(temp_weights)):
                         temp = self.weights[target][j] - \
                             lr * (self.h(X[train_index], self.weights[target], 0) - \
@@ -83,7 +83,10 @@ class LogisticRegression:
                         temp_weights[j] = temp.copy()
                     self.weights[target] = temp_weights.copy()
                     tq.update(1)
-   
+        if self.plot:
+            self.print_loss(loss)
+
+
     def fit_bgd(self, X, y):
         loss = {}
         bs = self.batch_size
@@ -96,6 +99,9 @@ class LogisticRegression:
                 temp_weights = [0] * len(self.weights[target])
                 lr = self.lr
                 for epoch in range(self.epoch):
+                    if self.plot:
+                        loss[target] += [self.Loss(self.h(X,
+                            self.weights[target], 1), code_y)]
                     for i in range(0, X.shape[0] - bs, bs):
                         for j in range(len(temp_weights)):
                             temp = self.weights[target][j] - \
@@ -111,11 +117,17 @@ class LogisticRegression:
                                 code_y[start:]) * X[start:, j]).mean()
                             temp_weights[j] = temp.copy()
                         self.weights[target] = temp_weights.copy()
-                    if self.shuffle:
-                        permutation = np.random.permutation(len(y))
-                        X = X[permutation]
-                        y = y[permutation]
                     tq.update(1)
+        if self.plot:
+            self.print_loss(loss)
+
+    def print_loss(self, loss):
+        plt.show(block=False)
+        for k, v in loss.items():
+            plt.plot(list(range(self.epoch)), v, label=k)
+        plt.title("Train loss")
+        plt.legend(list(loss.keys()))
+        plt.show()
 
 
     def fit(self, X, y):
