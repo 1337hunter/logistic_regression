@@ -107,13 +107,14 @@ def Normalize(X):
     return X, mean, std
 
 
-def train_test_split(X, y, test_size=0.1):
+def train_test_split(X, y, test_size=0.1, random_state=None):
     X_train = []
     y_train = []
     X_test = []
     y_test = []
     d = {}
     columns = []
+
     for x in y:
         if x not in columns:
             columns += [x]
@@ -128,6 +129,7 @@ def train_test_split(X, y, test_size=0.1):
                 X_train += [X[rez[i]]]
                 y_train += [y[rez[i]]]
             i += 1
+    np.random.seed(random_state)
     train_permutation = np.random.permutation(len(X_train))
     test_permutation = np.random.permutation(len(X_test))
     return  np.array(X_train)[train_permutation], \
