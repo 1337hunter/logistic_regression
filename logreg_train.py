@@ -28,15 +28,20 @@ def main():
     X = np.c_[[1] * X.shape[0], X]
     X_train, y_train, X_test, y_test = train_test_split(X, y, test_size=0.1, random_state=21)
     if "-SGD" in sys.argv:
-        logreg = LogisticRegression(optimizer='SGD', epoch=1400, lr=.115, random_state=42)
-    elif "-BGD" in sys.argv:
-        logreg = LogisticRegression(optimizer='BGD',
+        logreg = LogisticRegression(optimizer='SGD',
                 epoch=1400,
                 lr=.115,
-                random_state=42,
-                batch_size=20)
+                random_state=42)
+    elif "-BGD" in sys.argv:
+        logreg = LogisticRegression(optimizer='BGD',
+                epoch=11,
+                lr=.11,
+                random_state=5,
+                batch_size=10)
     else:
-        logreg = LogisticRegression(optimizer=None, epoch=70, lr=7)
+        logreg = LogisticRegression(optimizer=None,
+                epoch=70,
+                lr=7)
     logreg.fit(X_train, y_train)
     #logreg.fit(X, y) # this yields less accuracy
     pred = logreg.predict(X_test)

@@ -11,13 +11,15 @@ import ast
 
 
 class LogisticRegression:
-    def __init__(self, optimizer=None, epoch=70, lr=7, random_state=None, batch_size=None):
+    def __init__(self, optimizer=None, epoch=70, lr=7,
+            random_state=None, batch_size=None, batch_shuffle=False):
         self.weights = {}
         self.epoch = epoch
         self.lr = lr
         self.optimizer = optimizer
         self.random_state = random_state
         self.batch_size = batch_size
+        self.shuffle = batch_shuffle
     
     def sigmoid(self, z):
         return 1 / (1 + np.exp(-z))
@@ -88,18 +90,31 @@ class LogisticRegression:
         with tqdm(total=len(self.targets * self.epoch)) as tq:
             for target in self.targets:
                 np.random.seed(self.random_state)
-                self.weights[target] = (np.random.random(X.shape[1]))
+                self.weights[target] = (np.random.random(X.shape[1]) * 2)
                 loss[target] = []
                 code_y = np.array([1 if x == target else 0 for x in y])
                 temp_weights = [0] * len(self.weights[target])
                 lr = self.lr
-                for i in range(0, len(X) - bs, bs):
-                    for j in range(len(temp_weights)):
-                        temp = self.weights[target][j] - \
-                                lr * (self.h(X[i:i + bs], self.weights[target], 1) - \
-                                code_y[i:i + bs]) * X[i: i + bs][j]
-                        temp_weights[j] = temp.copy()
-                    self.weights[target] = temp_weights.copy()
+                for epoch in range(self.epoch):
+                    for i in range(0, X.shape[0] - bs, bs):
+                        for j in range(len(temp_weights)):
+                            temp = self.weights[target][j] - \
+                                    lr * ((self.h(X[i:i + bs], self.weights[target], 1) - \
+                                    code_y[i:i + bs]) * X[i: i + bs, j]).mean()
+                            temp_weights[j] = temp.copy()
+                        self.weights[target] = temp_weights.copy()
+                    if X.shape[0] % bs != 0:
+                        start = X.shape[0] - X.shape[0] % bs
+                        for j in range(len(temp_weights)):
+                            temp = self.weights[target][j] - \
+                                lr * ((self.h(X[start:], self.weights[target], 1) - \
+                                code_y[start:]) * X[start:, j]).mean()
+                            temp_weights[j] = temp.copy()
+                        self.weights[target] = temp_weights.copy()
+                    if self.shuffle:
+                        permutation = np.random.permutation(len(y))
+                        X = X[permutation]
+                        y = y[permutation]
                     tq.update(1)
 
 
